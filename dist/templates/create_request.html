@@ -1,0 +1,133 @@
+<!-- templates/create_request.html -->
+{% extends "base.html" %}
+
+{% block content %}
+<h2>Создать новую заявку</h2>
+
+<!-- Оставляем flash-сообщения для ошибок, возвращённых сервером -->
+{% with messages = get_flashed_messages(category_filter=["error"]) %}
+    {% if messages %}
+        <div class="alert alert-danger">
+            <ul class="mb-0">
+                {% for message in messages %}
+                    <li>{{ message }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+    {% endif %}
+{% endwith %}
+
+<!-- Модальное окно подтверждения -->
+<div class="modal fade" id="confirmModal" tabindex="-="confirmModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="confirmModalLabel">Подтверждение создания заявки</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Закрыть"></button>
+            </div>
+            <div class="modal-body">
+                Вы уверены, что хотите создать заявку?
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                <!-- Кнопка, которая при клике отправляет основную форму -->
+                <button type="button" class="btn btn-primary" id="confirmAndSubmitBtn">Создать заявку</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Основная форма -->
+<form method="post" id="createRequestForm">
+    <div class="row mb-3">
+        <div class="col-md-6">
+            <label for="forma" class="form-label">Форма*:</label>
+            <input type="text" class="form-control" id="forma" name="forma" value="{{ forma or '' }}" required>
+        </div>
+        <div class="col-md-6">
+            <label for="srok_vypolneniya" class="form-label">Срок выполнения*:</label>
+            <input type="date" class="form-control" id="srok_vypolneniya" name="srok_vypolneniya" value="{{ srok_vypolneniya or '' }}" required min="{{ today_date }}">
+        </div>
+    </div>
+    <div class="row mb-3">
+        <div class="col-md-6">
+            <label for="telefon_zakazchika" class="form-label">Телефон заказчика*:</label>
+            <input type="text" class="form-control" id="telefon_zakazchika" name="telefon_zakazchika" value="{{ telefon_zakazchika or '' }}" maxlength="50" required>
+        </div>
+        <div class="col-md-6">
+            <label for="cel_zakaza" class="form-label">Цель заказа*:</label>
+            <textarea class="form-control" id="cel_zakaza" name="cel_zakaza" rows="2" maxlength="300" required>{{ cel_zakaza or '' }}</textarea>
+        </div>
+    </div>
+    <div class="mb-3">
+        <label for="dop_informaciya" class="form-label">Дополнительная информация:</label>
+        <textarea class="form-control" id="dop_informaciya" name="dop_informaciya" rows="3" maxlength="1000">{{ dop_informaciya or '' }}</textarea>
+    </div>
+    <div class="mb-3">
+        <label for="razmeshenie_rezultatov" class="form-label">Размещение результатов:</label>
+        <textarea class="form-control" id="razmeshenie_rezultatov" name="razmeshenie_rezultatov" rows="2" maxlength="500">{{zultatov or '' }}</textarea>
+    </div>
+    <div class="mb-3">
+        <label for="formulirovka_zakaza" class="form-label">Формулировка заказа, характеристика запрашиваемой информации:</label>
+        <textarea class="form-control" id="formulirovka_zakaza" name="formulirovka_zakaza" rows="4" maxlength="5000">{{ formulirovka_zakaza or '' }}</textarea>
+    </div>
+    <div class="row mb-3">
+        <div class="col-md-6">
+            <label for="spisok_poley" class="form-label">Список выгружаемых полей:</label>
+            <textarea class="form-control" id="spisok_poley" name="spisok_poley" rows="2" maxlength="500">{{ spisok_poley or '' }}</textarea>
+        </div>
+        <div class="col-md-6">
+            <label for="por_ydok_sort" class="form-label">Порядок сортировки полей:</label>
+            <textarea class="form-control" id="por_ydok_sort" name="por_ydok_sort" rows="2" maxlength="500">{{ por_ydok_sort or '' }}</textarea>
+        </div>
+    </div>
+    <!-- Кнопки -->
+    <div class="d-flex">
+        <a href="{{ url_for('index') }}" class="btn btn-danger">Отмена</a>
+        <!-- Кнопка Создать теперь просто открывает модальное окно, если форма валидна -->
+        <button type="button" class="btn btn-primary ms-auto" id="openConfirmModalBtn">Создать заявку</button>
+    </div>
+</form>
+
+<script>
+// Устанавливаем min для даты
+document.addEventListener('DOMContentLoaded', function() {
+    const today = new Date();
+    const yyyy = today.getFullYear();
+    const mm = String(today.getMonth() + 1).padStart(2, '0');
+    const dd = String(today.getDate()).padStart(2, '0');
+    document.getElementById('srok_vypolneniya').setAttribute('min', `${yyyy}-${mm}-${dd}`);
+
+    // Обработчик для кнопки "Создать заявку"
+    document.getElementById('openConfirmModalBtn').addEventListener('click', function() {
+        const form = document.getElementById('createRequestForm'); // Проверяем валидность формы
+        if (form.checkValidity()) {
+            // Если валидна, открываем модальное окно
+            var myModal = new bootstrap.Modal(document.getElementById('confirmModal'));
+            myModal.show();
+        } else {
+            // Если не валидна, браузер показывает свои сообщения (голубые)
+            // Фокусируется на невалидном поле автоматически
+            form.reportValidity(); // Явно вызываем показ ошибок
+        }
+    });
+
+    // Обработчик для кнопки "Создать заявку" в модальном окне
+    document.getElementById('confirmAndSubmitBtn').addEventListener('click', function() {
+        // Добавляем скрытое поле 'confirmed' к основной форме
+        const form = document.getElementById('createRequestForm');
+        const hiddenInput = document.createElement('input');
+        hiddenInput.type = 'hidden';
+        hiddenInput.name = 'confirmed';
+        hiddenInput.value = 'yes';
+        form.appendChild(hiddenInput);
+
+        // Закрываем модальное окно (опционально, но обычно делается)
+        bootstrap.Modal.getInstance(document.getElementById('confirmModal')).hide();
+
+        // Отправляем основную форму
+        form.submit();
+    });
+});
+</script>
+{% endblock %}

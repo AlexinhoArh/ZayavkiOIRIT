@@ -1,0 +1,15 @@
+<!-- templates/enter_email.html -->
+{% extends "base.html" %}
+
+{% block content %}
+<h2>Добро пожаловать, {{ user.name }}!</h2>
+<p>Для завершения входа в систему, пожалуйста, укажите ваш адрес электронной почты.</p>
+
+<form method="post">
+    <div class="mb-3">
+        <label for="email" class="form-label">Email:</label>
+        <input type="email" class="form-control" id="email" name="email" required>
+    </div>
+    <button type="submit" class="btn btn-primary">Сохранить и продолжить</button>
+</form>
+{% endblock %}

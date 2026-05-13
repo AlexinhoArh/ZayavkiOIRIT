@@ -1,0 +1,31 @@
+{
+  "SECRET_KEY": "6f514980788f9e78f6d3ef1d1f63b5c8",
+  "DATABASE": {
+    "SERVER": "p29-app",
+    "NAME": "ZayavkiOIRIT",
+    "USERNAME": "sa",
+    "PASSWORD": "sa"
+  },
+  "ACTIVE_DIRECTORY": {
+    "SERVER": "ca-dc04.rosstat.local",
+    "DOMAIN": "rosstat.local",
+    "SEARCH_BASE": "DC=rosstat,DC=local"
+  },
+  "EMAIL": {
+    "SERVER": "45.84.130.42",
+    "PORT": 465,
+    "USE_SSL": true,
+    "USE_TLS": false,
+    "USERNAME": "29.oirit@rosstat.gov.ru",
+    "PASSWORD": "dVbnmwCY5rgnJ2fmmKRa"
+  },
+  "PROXY": {
+    "ENABLED": true,
+    "TYPE": "HTTP",
+    "HOST": "10.129.22.222",
+    "PORT": 3128,
+    "USERNAME": null,
+    "PASSWORD": null
+  },
+  "ADMIN_USERNAME": "29.EvdokimovAA"
+}

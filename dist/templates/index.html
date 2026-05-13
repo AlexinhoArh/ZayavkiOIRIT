@@ -1,0 +1,327 @@
+<!-- templates/index.html -->
+{% extends "base.html" %}
+
+{% block content %}
+<h2>Список заявок</h2>
+{% if current_user.role == 'economist' %}
+    <a href="{{ url_for('create_request') }}" class="btn btn-success mb-3">Создать заявку</a>
+{% endif %}
+
+<!-- Форма фильтрации (без заголовка) -->
+<div class="card mb-4">
+    <div class="card-body">
+        <form id="filterForm" method="GET">
+            <div class="row g-3">
+                <div class="col-md-2">
+                    <label for="filter_nom" class="form-label">Номер заявки</label>
+                    <input type="text" class="form-control" id="filter_nom" name="filter_nom" value="{{ filter_nom or '' }}">
+                </div>
+                <div class="col-md-2">
+                    <label for="filter_forma" class="form-label">Форма</label>
+                    <input type="text" class="form-control" id="filter_forma" name="filter_forma" value="{{ filter_forma or '' }}">
+                </div>
+                <div class="col-md-2">
+                    <label for="filter_economist" class="form-label">Экономист</label>
+                    <input type="text" class="form-control" id="filter_economist" name="filter_economist" value="{{ filter_economist or '' }}">
+                </div>
+                <div class="col-md-2">
+                    <label for="filter_programmer" class="form-label">Программист</label>
+                    <select class="form-select" id="filter_programmer" name="filter_programmer">
+                        <option value="">Все</option>
+                        {% for prog in unique_prog_objects %}
+                            <option value="{{ prog.id }}" {% if prog.id|string == filter_programmer %}selected{% endif %}>{{ prog.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label for="filter_tip" class="form-label">Тип заявки</label>
+                    <select class="form-select" id="filter_tip" name="filter_tip">
+                        <option value="">Все</option>
+                        {% for tip in unique_tip_objects %}
+                            <option value="{{ tip.id }}" {% if tip.id|string == filter_tip %}selected{% endif %}>{{ tip.nazvaniye }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label for="filter_status" class="form-label">Статус</label>
+                    <select class="form-select" id="filter_status" name="filter_status">
+                        <option value="">Все</option>
+                        {% for status in unique_statuses %}
+                            <option value="{{ status }}" {% if status == filter_status %}selected{% endif %}>{{ status }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+            <!-- Добавляем кнопку сброса -->
+            <div class="row g-3 mt-2">
+                <div class="col-md-12">
+                    <button type="button" id="resetFiltersBtn" class="btn btn-secondary">Сбросить фильтр</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Номер заявки</th>
+            <th>Форма</th>
+            <th>Экономист</th>
+            <th>Программист</th>
+            <th>Тип заявки</th>
+            <th>Статус</th>
+            <th>Дата составления</th>
+            <th>Примечание</th>
+            <th>Действия</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for req in requests %}
+        <tr>
+            <td>{{ req.nom_zayavki }}</td>
+            <td>{{ req.forma or '-' }}</td>
+            <td>{{ req.economist_user.name }}</td>
+            <td>{{ req.programmer_user.name if req.programmer_user else '-' }}</td>
+            <td>{{ req.tip_obj.nazvaniye if req.tip_obj else '-' }}</td>
+            <td><span class="badge {% if req.status == 'Выполнено' %}bg-success{% elif req.status == 'Отклонено' %}bg-danger{% else %}bg-warning{% endif %}">{{ req.status }}</span></td>
+            <td>{{ req.date_zagruzki_msk.strftime('%Y-%m-%d') if req.date_zagruzki_msk else '-' }}</td>
+            <td>
+                {% if req.primechanie %}
+                    <button type="button" class="btn btn-sm btn-warning" data-bs-toggle="modal" data-bs-target="#noteModal{{ req.id }}">
+                        Примечание
+                    </button>
+                {% else %}
+                    -
+                {% endif %}
+            </td>
+            <td>
+                <div class="actions-container">
+                    <button type="button" class="btn btn-sm btn-info mb-1" data-bs-toggle="modal" data-bs-target="#detailModal{{ req.id }}">
+                        Подробнее
+                    </button>
+                    {% if req.status != 'Отклонено' %}
+                        {% if (current_user.role == 'admin' or (current_user.role == 'programmer' and req.programmer_id == current_user.id)) and req.status != 'Выполнено' %}
+                            {% if req.programmer_id %}
+                                <form method="POST" action="{{ url_for('assign_request', request_id=req.id) }}" style="margin-bottom: 0.25rem;">
+                                    <select name="programmer_username" class="form-select form-select-sm">
+                                        <option value="">Сменить программиста</option>
+                                        {% for user in users_programmer %}
+                                            <option value="{{ user.username }}" {% if user.id == req.programmer_id %}selected{% endif %}>{{ user.name }}</option>
+                                        {% endfor %}
+                                    </select>
+                                    <button type="submit" class="btn btn-sm btn-primary mt-1">Сменить</button>
+                                </form>
+                            {% endif %}
+                        {% endif %}
+                        {% if current_user.role == 'admin' and req.status == 'На рассмотрении' %}
+                            <form method="POST" action="{{ url_for('assign_request', request_id=req.id) }}" style="margin-bottom: 0.25rem;">
+                                <select name="programmer_username" class="form-select form-select-sm">
+                                    <option value="">Выберите программиста</option>
+                                    {% for user in users_programmer %}
+                                        <option value="{{ user.username }}" {% if user.id == req.programmer_id %}selected{% endif %}>{{ user.name }}</option>
+                                    {% endfor %}
+                                </select>
+                                <select name="tip_zayavki_id" class="form-select form-select-sm mt-1">
+                                    <option value="">Выберите тип</option>
+                                    {% for tip in tipy_zayavok %}
+                                        <option value="{{ tip.id }}" {% if tip.id == req.tip_zayavki_id %}selected{% endif %}>{{ tip.nazvaniye }}</option>
+                                    {% endfor %}
+                                </select>
+                                <button type="submit" class="btn btn-sm btn-primary mt-1">Назначить</button>
+                            </form>
+                        {% endif %}
+                        {% if current_user.role == 'programmer' and req.programmer_id == current_user.id and req.status == 'В работе' %}
+                            <button type="button" class="btn btn-sm btn-success mb-1" data-bs-toggle="modal" data-bs-target="#completeModal{{ req.id }}">
+                                Выполнить
+                            </button>
+                        {% endif %}
+                        {% if current_user.role == 'admin' %}
+                            {% if req.status in ['На рассмотрении', 'В работе'] %}
+                                <form method="POST" action="{{ url_for('reject_request', request_id=req.id) }}" style="display:inline;">
+                                    <button type="submit" class="btn btn-sm btn-danger mb-1" onclick="return confirmReject('{{ req.nom_zayavki }}');">Отклонить</button>
+                                </form>
+                            {% endif %}
+                        {% elif current_user.role == 'programmer' and req.programmer_id == current_user.id and req.status == 'В работе' %}
+                            <form method="POST" action="{{ url_for('reject_request', request_id=req.id) }}" style="display:inline;">
+                                <button type="submit" class="btn btn-sm btn-danger mb-1" onclick="return confirmReject('{{ req.nom_zayavki }}');">Отклонить</button>
+                            </form>
+                        {% endif %}
+                    {% endif %}
+                </div>
+            </td>
+        </tr>
+
+        <!-- Modal для завершения с примечанием -->
+        <div class="modal fade" id="completeModal{{ req.id }}" tabindex="-1" aria-labelledby="completeModalLabel{{ req.id }}" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="completeModalLabel{{ req.id }}">Завершить заявку {{ req.nom_zayavki }}</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <form method="POST" action="{{ url_for('complete_request_with_note', request_id=req.id) }}">
+                        <div class="modal-body">
+                            <label for="completion_note_{{ req.id }}" class="form-label">Примечание (необязательно):</label>
+                            <textarea class="form-control" id="completion_note_{{ req.id }}" name="completion_note" rows="3"></textarea>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                            <button type="submit" class="btn btn-success">Подтвердить выполнение</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal для примечания -->
+        <div class="modal fade" id="noteModal{{ req.id }}" tabindex="-1" aria-labelledby="noteModalLabel{{ req.id }}" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="noteModalLabel{{ req.id }}">Примечание к заявке {{ req.nom_zayavki }}</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <pre>{{ req.primechanie }}</pre>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрыть</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal для деталей -->
+        <div class="modal fade" id="detailModal{{ req.id }}" tabindex="-1" aria-labelledby="detailModalLabel{{ req.id }}" aria-hidden="true">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="detailModalLabel{{ req.id }}">Детали заявки {{ req.nom_zayavki }}</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p><strong>Экономист:</strong> {{ req.economist_user.name }}</p>
+                        <p><strong>Отдел:</strong> {{ req.otdel or '-' }}</p>
+                        <p><strong>Тип заявки:</strong> {{ req.tip_obj.nazvaniye if req.tip_obj else '-' }}</p>
+                        <p><strong>Дата заполнения:</strong> {{ req.data_zapolneniya.strftime('%Y-%m-%d') if req.data_zapolneniya else '-' }}</p>
+                        <p><strong>Срок выполнения:</strong> {{ req.srok_vypolneniya.strftime('%Y-%m-%d') if req.srok_vypolneniya else '-' }}</p>
+                        <p><strong>Телефон заказчика:</strong> {{ req.telefon_zakazchika or '-' }}</p>
+                        <p><strong>Цель заказа:</strong> {{ req.cel_zakaza or '-' }}</p>
+                        <p><strong>Дополнительная информация:</strong> {{ req.dop_informaciya or '-' }}</p>
+                        <p><strong>Размещение результатов:</strong> {{ req.razmeshenie_rezultatov or '-' }}</p>
+                        <p><strong>Формулировка заказа:</strong> {{ req.formulirovka_zakaza or '-' }}</p>
+                        <p><strong>Список полей:</strong> {{ req.spisok_poley or '-' }}</p>
+                        <p><strong>Порядок сортировки:</strong> {{ req.por_ydok_sort or '-' }}</p>
+                        <p><strong>Примечание:</strong> {{ req.primechanie or '-' }}</p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрыть</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- End Modals -->
+
+        {% endfor %}
+    </tbody>
+</table>
+
+<script>
+function confirmReject(nom) {
+    return confirm(`Отклонить заявку ${nom}?`);
+}
+
+// Скрипт для обновления URL и фильтрации с debouncing
+document.addEventListener('DOMContentLoaded', function () {
+    const filterNomInput = document.getElementById('filter_nom');
+    const filterFormaInput = document.getElementById('filter_forma');
+    const filterEconomistInput = document.getElementById('filter_economist');
+    const filterProgrammerSelect = document.getElementById('filter_programmer');
+    const filterTipSelect = document.getElementById('filter_tip');
+    const filterStatusSelect = document.getElementById('filter_status');
+    const resetButton = document.getElementById('resetFiltersBtn'); // Новая кнопка
+
+    let debounceTimer; // Переменная для хранения таймера
+
+    const updateURLAndReload = function(event) {
+        // Очищаем предыдущий таймер, если он был
+        clearTimeout(debounceTimer);
+
+        // Устанавливаем новый таймер
+        debounceTimer = setTimeout(() => {
+            // Получаем текущие значения полей
+            const nomValue = filterNomInput.value.trim();
+            const formaValue = filterFormaInput.value.trim();
+            const economistValue = filterEconomistInput.value.trim();
+            const progValue = filterProgrammerSelect.value; // Получаем ID
+            const tipValue = filterTipSelect.value; // Получаем ID
+            const statusValue = filterStatusSelect.value;
+
+            // Формируем новый URL с параметрами
+            let newUrl = window.location.pathname + '?';
+            const params = [];
+            if (nomValue) params.push('filter_nom=' + encodeURIComponent(nomValue));
+            if (formaValue) params.push('filter_forma=' + encodeURIComponent(formaValue));
+            if (economistValue) params.push('filter_economist=' + encodeURIComponent(economistValue));
+            if (progValue) params.push('filter_programmer=' + encodeURIComponent(progValue)); // Передаем ID
+            if (tipValue) params.push('filter_tip=' + encodeURIComponent(tipValue)); // Передаем ID
+            if (statusValue) params.push('filter_status=' + encodeURIComponent(statusValue));
+
+            // Обновляем URL без перезагрузки
+            newUrl += params.join('&');
+            // console.log("Updating URL to:", newUrl); // Для отладки
+            window.history.replaceState(null, null, newUrl);
+
+            // Принудительно отправляем GET-запрос на обновленный URL
+            // чтобы получить отфильтрованные данные
+            window.location.href = newUrl;
+        }, 500); // 500 миллисекунд задержки после последнего ввода
+    };
+
+    // Функция сброса фильтров
+    const resetFilters = function() {
+        // Устанавливаем пустые значения для всех полей
+        filterNomInput.value = '';
+        filterFormaInput.value = '';
+        filterEconomistInput.value = '';
+        filterProgrammerSelect.value = ''; // Выбираем опцию "Все"
+        filterTipSelect.value = ''; // Выбираем опцию "Все"
+        filterStatusSelect.value = ''; // Выбираем опцию "Все"
+
+        // Принудительно отправляем GET-запрос на URL без параметров фильтра
+        // чтобы получить полный список заявок
+        window.location.href = window.location.pathname;
+    };
+
+    // Добавляем обработчики событий
+    // Используем 'input' для текстовых полей
+    filterNomInput.addEventListener('input', updateURLAndReload);
+    filterFormaInput.addEventListener('input', updateURLAndReload);
+    filterEconomistInput.addEventListener('input', updateURLAndReload);
+
+    // Используем 'change' для селектов (они обновляют URL при изменении)
+    filterProgrammerSelect.addEventListener('change', updateURLAndReload);
+    filterTipSelect.addEventListener('change', updateURLAndReload);
+    filterStatusSelect.addEventListener('change', updateURLAndReload);
+
+    // Добавляем обработчик для кнопки сброса
+    resetButton.addEventListener('click', resetFilters);
+});
+</script>
+
+<style>
+.actions-container {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.25rem;
+}
+.actions-container .form-select,
+.actions-container .btn {
+    margin: 0;
+    width: 100%;
+}
+</style>
+
+{% endblock %}
