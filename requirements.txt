@@ -1,0 +1,17 @@
+# Flask и расширения
+Flask>=2.3.0
+Flask-SQLAlchemy>=3.0.0
+Flask-Login>=0.6.0
+
+# Работа с MSSQL базой данных
+pyodbc>=4.0.0
+pymssql>=2.2.0
+
+# LDAP аутентификация (Active Directory)
+ldap3>=2.9.0
+
+# Работа с прокси для отправки email
+PySocks>=1.7.0
+
+# Работа с часовыми поясами
+pytz>=2023.0
