@@ -1,4 +1,5 @@
 ```
+# Dependencies
 # Python
 __pycache__/
 *.pyc
@@ -8,6 +9,15 @@ __pycache__/
 env/
 venv/
 .venv/
+.env
+.env.local
+.env.*
+.venv/
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Build artifacts
+build/
 .ENV
 .ENV.*
 .venv/
@@ -68,6 +78,25 @@ share/python-wheels/
 .installed.cfg
 *.egg
 
+# Testing
+.coverage
+coverage/
+htmlcov/
+.nosetests
+.unit_test_results.xml
+.pytest_cache/
+
+# Logs
+*.log
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
 # MyPy
 .mypy_cache/
 .dmypy.json

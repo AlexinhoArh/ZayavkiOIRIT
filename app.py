@@ -570,4 +570,6 @@ if __name__ == '__main__':
         db.session.commit()
         print("База данных инициализирована успешно.")
 
+    # Встроенный сервер только для разработки!
+    # Для продакшена используйте: waitress-serve --host=0.0.0.0 --port=1313 app:app
     app.run(host='0.0.0.0', port=1313, debug=True)

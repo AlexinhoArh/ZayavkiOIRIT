@@ -16,5 +16,7 @@ PySocks>=1.7.0
 # Работа с часовыми поясами
 pytz>=2023.0
 
+# WSGI сервер для продакшена (Windows)
+waitress>=2.1.0
 #PyInstaller для создания исполняемого файла
 pyinstaller>=6.20.0
