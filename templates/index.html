@@ -243,8 +243,14 @@ document.addEventListener('DOMContentLoaded', function () {
     const resetButton = document.getElementById('resetFiltersBtn'); // Новая кнопка
 
     let debounceTimer; // Переменная для хранения таймера
+    let activeElementId = null; // ID элемента, в котором был фокус
 
     const updateURLAndReload = function(event) {
+        // Сохраняем ID элемента, в котором был фокус до обновления
+        if (document.activeElement && document.activeElement.id) {
+            activeElementId = document.activeElement.id;
+        }
+
         // Очищаем предыдущий таймер, если он был
         clearTimeout(debounceTimer);
 
@@ -276,7 +282,17 @@ document.addEventListener('DOMContentLoaded', function () {
             // Принудительно отправляем GET-запрос на обновленный URL
             // чтобы получить отфильтрованные данные
             window.location.href = newUrl;
-        }, 500); // 500 миллисекунд задержки после последнего ввода
+
+            // Восстанавливаем фокус после загрузки страницы (с небольшой задержкой)
+            setTimeout(() => {
+                if (activeElementId) {
+                    const element = document.getElementById(activeElementId);
+                    if (element) {
+                        element.focus();
+                    }
+                }
+            }, 100);
+        }, 5000); // 5000 миллисекунд (5 секунд) задержки после последнего ввода
     };
 
     // Функция сброса фильтров
