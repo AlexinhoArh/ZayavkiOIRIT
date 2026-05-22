@@ -9,9 +9,9 @@
 
 <!-- Форма фильтрации (без заголовка) -->
 <div class="card mb-4">
-    <div class="card-body">
+    <div class="card-body px-3 py-2">
         <form id="filterForm" method="GET">
-            <div class="row g-3">
+            <div class="row g-2">
                 <div class="col-md-2">
                     <label for="filter_nom" class="form-label">Номер заявки</label>
                     <input type="text" class="form-control" id="filter_nom" name="filter_nom" value="{{ filter_nom or '' }}">
@@ -62,18 +62,18 @@
     </div>
 </div>
 
-<table class="table table-striped">
+<table class="table table-striped table-sm">
     <thead>
         <tr>
-            <th style="width: 8%;">Номер заявки</th>
-            <th style="width: 8%;">Форма</th>
-            <th style="width: 10%;">Экономист</th>
-            <th style="width: 10%;">Программист</th>
-            <th style="width: 10%;">Тип заявки</th>
-            <th style="width: 8%;">Статус</th>
-            <th style="width: 10%;">Дата составления</th>
-            <th style="width: 8%;">Примечание</th>
-            <th style="width: 20%;">Действия</th>
+            <th style="width: 7%;">Номер заявки</th>
+            <th style="width: 7%;">Форма</th>
+            <th style="width: 9%;">Экономист</th>
+            <th style="width: 9%;">Программист</th>
+            <th style="width: 9%;">Тип заявки</th>
+            <th style="width: 7%;">Статус</th>
+            <th style="width: 9%;">Дата составления</th>
+            <th style="width: 7%;">Примечание</th>
+            <th style="width: 16%;">Действия</th>
         </tr>
     </thead>
     <tbody>
