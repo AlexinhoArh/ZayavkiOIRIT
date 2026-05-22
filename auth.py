@@ -163,7 +163,7 @@ def authenticate_user(username: str, password: str) -> Optional[Tuple[User, bool
                 user_db.department = user_info['department']
                 update_needed = True
             
-            # Обновление email только если в БД он пуст
+            # Если email в БД пуст, пробуем взять его из AD
             if not user_db.email and user_info['email']:
                 user_db.email = user_info['email']
                 update_needed = True
@@ -185,7 +185,9 @@ def authenticate_user(username: str, password: str) -> Optional[Tuple[User, bool
             db.session.commit()
             print(f"Пользователь '{username}' создан в БД.")
         
-        # Проверка необходимости ввода email
+        # Проверяем необходимость ввода email после синхронизации
+        # Если email все еще пуст (не был заполнен ни в БД, ни в AD),
+        # возвращаем флаг needs_email=True для показа формы ввода
         if not user_db.email:
             return (user_db, True)
         
