@@ -65,15 +65,15 @@
 <table class="table table-striped">
     <thead>
         <tr>
-            <th>Номер заявки</th>
-            <th>Форма</th>
-            <th>Экономист</th>
-            <th>Программист</th>
-            <th>Тип заявки</th>
-            <th>Статус</th>
-            <th>Дата составления</th>
-            <th>Примечание</th>
-            <th>Действия</th>
+            <th style="width: 8%;">Номер заявки</th>
+            <th style="width: 8%;">Форма</th>
+            <th style="width: 10%;">Экономист</th>
+            <th style="width: 10%;">Программист</th>
+            <th style="width: 10%;">Тип заявки</th>
+            <th style="width: 8%;">Статус</th>
+            <th style="width: 10%;">Дата составления</th>
+            <th style="width: 8%;">Примечание</th>
+            <th style="width: 28%;">Действия</th>
         </tr>
     </thead>
     <tbody>
@@ -105,7 +105,7 @@
                             {% if req.programmer_id %}
                                 <form method="POST" action="{{ url_for('assign_request', request_id=req.id) }}" style="margin-bottom: 0.25rem;">
                                     <select name="programmer_username" class="form-select form-select-sm">
-                                        <option value="">Сменить программиста</option>
+                                        <option value="">Программист</option>
                                         {% for user in users_programmer %}
                                             <option value="{{ user.username }}" {% if user.id == req.programmer_id %}selected{% endif %}>{{ user.name }}</option>
                                         {% endfor %}
@@ -117,13 +117,13 @@
                         {% if current_user.role == 'admin' and req.status == 'На рассмотрении' %}
                             <form method="POST" action="{{ url_for('assign_request', request_id=req.id) }}" style="margin-bottom: 0.25rem;">
                                 <select name="programmer_username" class="form-select form-select-sm">
-                                    <option value="">Выберите программиста</option>
+                                    <option value="">Программист</option>
                                     {% for user in users_programmer %}
                                         <option value="{{ user.username }}" {% if user.id == req.programmer_id %}selected{% endif %}>{{ user.name }}</option>
                                     {% endfor %}
                                 </select>
                                 <select name="tip_zayavki_id" class="form-select form-select-sm mt-1">
-                                    <option value="">Выберите тип</option>
+                                    <option value="">Тип заявки</option>
                                     {% for tip in tipy_zayavok %}
                                         <option value="{{ tip.id }}" {% if tip.id == req.tip_zayavki_id %}selected{% endif %}>{{ tip.nazvaniye }}</option>
                                     {% endfor %}
