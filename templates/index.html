@@ -313,10 +313,11 @@ document.addEventListener('DOMContentLoaded', function () {
     // Функция для немедленного применения фильтра (при нажатии Enter)
     const applyFilterImmediately = function(event) {
         if (event.key === 'Enter') {
+            event.preventDefault(); // Предотвращаем стандартное поведение Enter
             // Очищаем предыдущий таймер
             clearTimeout(debounceTimer);
             // Вызываем обновление сразу
-            updateURLAndReload(event);
+            updateURLAndReload();
         }
     };
 
