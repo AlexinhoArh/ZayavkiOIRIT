@@ -22,10 +22,11 @@
   "PROXY": {
     "ENABLED": true,
     "TYPE": "HTTP",
-    "HOST": "10.129.22.222",
-    "PORT": 3128,
+    "HOST": "10.129.20.146",
+    "PORT": 8080,
     "USERNAME": null,
     "PASSWORD": null
   },
-  "ADMIN_USERNAME": "29.EvdokimovAA"
+  "ADMIN_USERNAME": "29.ZaikovaLS",
+  "APP_URL": "http://10.129.7.52:1313/"
 }

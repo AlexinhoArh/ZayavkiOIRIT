@@ -64,6 +64,8 @@ PROXY_PASSWORD = _PROXY_CONFIG['PASSWORD']
 # Логгер модуля
 logger = logging.getLogger(__name__)
 
+# Настройки URL приложения
+APP_URL = _CONFIG.get('APP_URL', 'http://localhost:5000')
 
 def send_email(
     to_email: str,
@@ -205,7 +207,7 @@ def send_new_request_notification(admin_email: str, request_number: str, request
         send_new_request_notification('admin@example.com', '2024-1', 'Иванов И.И.')
     """
     subject = "Новая заявка"
-    body = f"Поступила новая заявка {request_number} от {requester_name}. Необходимо назначить исполнителя"
+    body = f"Поступила новая заявка {request_number} от {requester_name}. Необходимо назначить исполнителя\n\n{APP_URL}"
     send_email(admin_email, subject, body)
 
 
@@ -222,7 +224,7 @@ def send_assignment_notification(programmer_email: str, request_number: str, req
         send_assignment_notification('dev@example.com', '2024-1', 'Иванов И.И.')
     """
     subject = "Новая заявка"
-    body = f"На Вас назначена заявка {request_number} от {requester_name}"
+    body = f"На Вас назначена заявка {request_number} от {requester_name}\n\n{APP_URL}"
     send_email(programmer_email, subject, body)
 
 
@@ -243,7 +245,9 @@ def send_completion_notification(requester_email: str, request_number: str, prog
 
 Ваша заявка {request_number} выполнена. Ответственный программист: {programmer_name}
 
-Данное письмо было создано автоматически. Пожалуйста, не отвечайте на него. По всем вопросам обращайтесь в отдел ИРиТ"""
+Данное письмо было создано автоматически. Пожалуйста, не отвечайте на него. По всем вопросам обращайтесь в отдел ИРиТ
+
+{APP_URL}"""
     send_email(requester_email, subject, body)
 
 
@@ -264,5 +268,6 @@ def send_rejection_notification(requester_email: str, request_number: str, rejec
 
 Ваша заявка {request_number} была отклонена специалистом ОИРиТ {rejector_name}
 
-Данное письмо было создано автоматически. Пожалуйста, не отвечайте на него. По всем вопросам обращайтесь в отдел ИРиТ"""
-    send_email(requester_email, subject, body)
+Данное письмо было создано автоматически. Пожалуйста, не отвечайте на него. По всем вопросам обращайтесь в отдел ИРиТ
+
+{APP_URL}"""
