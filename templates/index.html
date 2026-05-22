@@ -310,11 +310,25 @@ document.addEventListener('DOMContentLoaded', function () {
         window.location.href = window.location.pathname;
     };
 
+    // Функция для немедленного применения фильтра (при нажатии Enter)
+    const applyFilterImmediately = function(event) {
+        if (event.key === 'Enter') {
+            // Очищаем предыдущий таймер
+            clearTimeout(debounceTimer);
+            // Вызываем обновление сразу
+            updateURLAndReload(event);
+        }
+    };
+
     // Добавляем обработчики событий
     // Используем 'input' для текстовых полей
     filterNomInput.addEventListener('input', updateURLAndReload);
     filterFormaInput.addEventListener('input', updateURLAndReload);
     filterEconomistInput.addEventListener('input', updateURLAndReload);
+    // Добавляем обработчик Enter для текстовых полей
+    filterNomInput.addEventListener('keydown', applyFilterImmediately);
+    filterFormaInput.addEventListener('keydown', applyFilterImmediately);
+    filterEconomistInput.addEventListener('keydown', applyFilterImmediately);
 
     // Используем 'change' для селектов (они обновляют URL при изменении)
     filterProgrammerSelect.addEventListener('change', updateURLAndReload);
