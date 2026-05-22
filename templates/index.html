@@ -316,8 +316,34 @@ document.addEventListener('DOMContentLoaded', function () {
             event.preventDefault(); // Предотвращаем стандартное поведение Enter
             // Очищаем предыдущий таймер
             clearTimeout(debounceTimer);
-            // Вызываем обновление сразу
-            updateURLAndReload();
+            
+            // Сохраняем ID элемента, в котором был фокус до обновления
+            if (document.activeElement && document.activeElement.id) {
+                activeElementId = document.activeElement.id;
+            }
+            
+            // Получаем текущие значения полей
+            const nomValue = filterNomInput.value.trim();
+            const formaValue = filterFormaInput.value.trim();
+            const economistValue = filterEconomistInput.value.trim();
+            const progValue = filterProgrammerSelect.value;
+            const tipValue = filterTipSelect.value;
+            const statusValue = filterStatusSelect.value;
+
+            // Формируем новый URL с параметрами
+            let newUrl = window.location.pathname + '?';
+            const params = [];
+            if (nomValue) params.push('filter_nom=' + encodeURIComponent(nomValue));
+            if (formaValue) params.push('filter_forma=' + encodeURIComponent(formaValue));
+            if (economistValue) params.push('filter_economist=' + encodeURIComponent(economistValue));
+            if (progValue) params.push('filter_programmer=' + encodeURIComponent(progValue));
+            if (tipValue) params.push('filter_tip=' + encodeURIComponent(tipValue));
+            if (statusValue) params.push('filter_status=' + encodeURIComponent(statusValue));
+
+            // Обновляем URL и перезагружаем страницу немедленно
+            newUrl += params.join('&');
+            window.history.replaceState(null, null, newUrl);
+            window.location.href = newUrl;
         }
     };
 

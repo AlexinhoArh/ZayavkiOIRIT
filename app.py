@@ -100,6 +100,10 @@ def index():
     # Базовый запрос
     query = Request.query
 
+    # Если пользователь с ролью economist, показываем только его заявки
+    if current_user.role == 'economist':
+        query = query.filter(Request.economist_id == current_user.id)
+
     # Применяем фильтры
     if filter_nom:
         query = query.filter(Request.nom_zayavki.ilike(f'%{filter_nom}%'))
