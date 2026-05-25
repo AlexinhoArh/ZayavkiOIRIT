@@ -25,7 +25,6 @@ PyInstaller.__main__.run([
     '--windowed',  # Без консольного окна (убрать, если нужно видеть логи в консоли)
     '--add-data=config.json;.',  # Добавить config.json (разделитель ; для Windows, : для Linux/Mac)
     '--add-data=templates;templates',  # Добавить папку templates
-    '--add-data=static;static',  # Добавить папку static
     '--hidden-import=flask',
     '--hidden-import=flask_login',
     '--hidden-import=flask_sqlalchemy',
