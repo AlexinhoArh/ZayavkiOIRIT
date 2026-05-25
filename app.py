@@ -84,6 +84,12 @@ def get_moscow_time(dt):
 
 
 # --- Маршруты ---
+@app.route('/favicon.ico')
+def favicon():
+    """Возвращает иконку сайта, чтобы избежать 404 ошибок."""
+    # Возвращаем пустой ответ с статусом 204 (No Content)
+    # или редирект на пустую иконку
+    return '', 204  # 204 No Content - наиболее подходящий ответ
 
 @app.route('/')
 @login_required

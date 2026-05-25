@@ -234,94 +234,58 @@ function confirmReject(nom) {
 
 // Скрипт для обновления URL и фильтрации с debouncing
 document.addEventListener('DOMContentLoaded', function () {
+    // Получаем элементы фильтров
     const filterNomInput = document.getElementById('filter_nom');
     const filterFormaInput = document.getElementById('filter_forma');
     const filterEconomistInput = document.getElementById('filter_economist');
     const filterProgrammerSelect = document.getElementById('filter_programmer');
     const filterTipSelect = document.getElementById('filter_tip');
     const filterStatusSelect = document.getElementById('filter_status');
-    const resetButton = document.getElementById('resetFiltersBtn'); // Новая кнопка
+    // ИСПРАВЛЕНО: кнопка имеет ID 'resetFiltersBtn'
+    const resetButton = document.getElementById('resetFiltersBtn');
 
-    let debounceTimer; // Переменная для хранения таймера
-    let activeElementId = null; // ID элемента, в котором был фокус
+    // Проверяем существование элементов
+    if (!filterNomInput || !filterFormaInput || !filterEconomistInput ||
+        !filterProgrammerSelect || !filterTipSelect || !filterStatusSelect || !resetButton) {
+        console.warn('Не все элементы фильтров найдены на странице');
+        console.log('resetButton найден:', !!resetButton); // Для отладки
+        return;
+    }
 
-    const updateURLAndReload = function(event) {
-        // Сохраняем ID элемента, в котором был фокус до обновления
+    let debounceTimer = null;
+    let isApplyingFilter = false;
+
+    // Функция сохранения фокуса
+    const saveFocusBeforeReload = () => {
         if (document.activeElement && document.activeElement.id) {
-            activeElementId = document.activeElement.id;
+            sessionStorage.setItem('focusElementId', document.activeElement.id);
         }
+    };
 
-        // Очищаем предыдущий таймер, если он был
-        clearTimeout(debounceTimer);
-
-        // Устанавливаем новый таймер
-        debounceTimer = setTimeout(() => {
-            // Получаем текущие значения полей
-            const nomValue = filterNomInput.value.trim();
-            const formaValue = filterFormaInput.value.trim();
-            const economistValue = filterEconomistInput.value.trim();
-            const progValue = filterProgrammerSelect.value; // Получаем ID
-            const tipValue = filterTipSelect.value; // Получаем ID
-            const statusValue = filterStatusSelect.value;
-
-            // Формируем новый URL с параметрами
-            let newUrl = window.location.pathname + '?';
-            const params = [];
-            if (nomValue) params.push('filter_nom=' + encodeURIComponent(nomValue));
-            if (formaValue) params.push('filter_forma=' + encodeURIComponent(formaValue));
-            if (economistValue) params.push('filter_economist=' + encodeURIComponent(economistValue));
-            if (progValue) params.push('filter_programmer=' + encodeURIComponent(progValue)); // Передаем ID
-            if (tipValue) params.push('filter_tip=' + encodeURIComponent(tipValue)); // Передаем ID
-            if (statusValue) params.push('filter_status=' + encodeURIComponent(statusValue));
-
-            // Обновляем URL без перезагрузки
-            newUrl += params.join('&');
-            // console.log("Updating URL to:", newUrl); // Для отладки
-            window.history.replaceState(null, null, newUrl);
-
-            // Принудительно отправляем GET-запрос на обновленный URL
-            // чтобы получить отфильтрованные данные
-            window.location.href = newUrl;
-
-            // Восстанавливаем фокус после загрузки страницы (с небольшой задержкой)
-            setTimeout(() => {
-                if (activeElementId) {
-                    const element = document.getElementById(activeElementId);
-                    if (element) {
-                        element.focus();
+    // Функция восстановления фокуса
+    const restoreFocusAfterReload = () => {
+        const focusId = sessionStorage.getItem('focusElementId');
+        if (focusId) {
+            sessionStorage.removeItem('focusElementId');
+            const elementToFocus = document.getElementById(focusId);
+            if (elementToFocus) {
+                setTimeout(() => {
+                    elementToFocus.focus();
+                    if (elementToFocus.tagName === 'INPUT' || elementToFocus.tagName === 'TEXTAREA') {
+                        const length = elementToFocus.value.length;
+                        elementToFocus.setSelectionRange(length, length);
                     }
-                }
-            }, 100);
-        }, 5000); // 5000 миллисекунд (5 секунд) задержки после последнего ввода
-    };
-
-    // Функция сброса фильтров
-    const resetFilters = function() {
-        // Устанавливаем пустые значения для всех полей
-        filterNomInput.value = '';
-        filterFormaInput.value = '';
-        filterEconomistInput.value = '';
-        filterProgrammerSelect.value = ''; // Выбираем опцию "Все"
-        filterTipSelect.value = ''; // Выбираем опцию "Все"
-        filterStatusSelect.value = ''; // Выбираем опцию "Все"
-
-        // Принудительно отправляем GET-запрос на URL без параметров фильтра
-        // чтобы получить полный список заявок
-        window.location.href = window.location.pathname;
-    };
-
-    // Функция для немедленного применения фильтра (при нажатии Enter)
-    const applyFilterImmediately = function(event) {
-        if (event.key === 'Enter') {
-            event.preventDefault(); // Предотвращаем стандартное поведение Enter
-            // Очищаем предыдущий таймер
-            clearTimeout(debounceTimer);
-            
-            // Сохраняем ID элемента, в котором был фокус до обновления
-            if (document.activeElement && document.activeElement.id) {
-                activeElementId = document.activeElement.id;
+                }, 100);
             }
-            
+        }
+    };
+
+    // Основная функция применения фильтра
+    const applyFilter = () => {
+        if (isApplyingFilter) return;
+        isApplyingFilter = true;
+
+        try {
             // Получаем текущие значения полей
             const nomValue = filterNomInput.value.trim();
             const formaValue = filterFormaInput.value.trim();
@@ -330,40 +294,154 @@ document.addEventListener('DOMContentLoaded', function () {
             const tipValue = filterTipSelect.value;
             const statusValue = filterStatusSelect.value;
 
-            // Формируем новый URL с параметрами
-            let newUrl = window.location.pathname + '?';
-            const params = [];
-            if (nomValue) params.push('filter_nom=' + encodeURIComponent(nomValue));
-            if (formaValue) params.push('filter_forma=' + encodeURIComponent(formaValue));
-            if (economistValue) params.push('filter_economist=' + encodeURIComponent(economistValue));
-            if (progValue) params.push('filter_programmer=' + encodeURIComponent(progValue));
-            if (tipValue) params.push('filter_tip=' + encodeURIComponent(tipValue));
-            if (statusValue) params.push('filter_status=' + encodeURIComponent(statusValue));
+            // Формируем параметры URL
+            const params = new URLSearchParams();
 
-            // Обновляем URL и перезагружаем страницу немедленно
-            newUrl += params.join('&');
-            window.history.replaceState(null, null, newUrl);
+            if (nomValue) params.append('filter_nom', nomValue);
+            if (formaValue) params.append('filter_forma', formaValue);
+            if (economistValue) params.append('filter_economist', economistValue);
+            if (progValue && progValue !== '') params.append('filter_programmer', progValue);
+            if (tipValue && tipValue !== '') params.append('filter_tip', tipValue);
+            if (statusValue && statusValue !== '') params.append('filter_status', statusValue);
+
+            // ВАЖНО: Используем ТОЛЬКО '/' как базовый путь
+            const basePath = '/';
+            const queryString = params.toString();
+            const newUrl = queryString ? `${basePath}?${queryString}` : basePath;
+
+            // Проверяем, изменился ли URL
+            const currentFullUrl = window.location.pathname + window.location.search;
+            if (newUrl === currentFullUrl) {
+                isApplyingFilter = false;
+                return;
+            }
+
+            // Сохраняем фокус и переходим на новый URL
+            saveFocusBeforeReload();
+            console.log('Переход на URL:', newUrl);
             window.location.href = newUrl;
+
+        } catch (error) {
+            console.error('Ошибка при применении фильтра:', error);
+            isApplyingFilter = false;
         }
     };
 
-    // Добавляем обработчики событий
-    // Используем 'input' для текстовых полей
-    filterNomInput.addEventListener('input', updateURLAndReload);
-    filterFormaInput.addEventListener('input', updateURLAndReload);
-    filterEconomistInput.addEventListener('input', updateURLAndReload);
-    // Добавляем обработчик Enter для текстовых полей
-    filterNomInput.addEventListener('keydown', applyFilterImmediately);
-    filterFormaInput.addEventListener('keydown', applyFilterImmediately);
-    filterEconomistInput.addEventListener('keydown', applyFilterImmediately);
+    // Функция с debounce для текстовых полей
+    const applyFilterWithDebounce = () => {
+        if (debounceTimer) {
+            clearTimeout(debounceTimer);
+        }
 
-    // Используем 'change' для селектов (они обновляют URL при изменении)
-    filterProgrammerSelect.addEventListener('change', updateURLAndReload);
-    filterTipSelect.addEventListener('change', updateURLAndReload);
-    filterStatusSelect.addEventListener('change', updateURLAndReload);
+        if (document.activeElement && document.activeElement.id) {
+            sessionStorage.setItem('focusElementId', document.activeElement.id);
+        }
 
-    // Добавляем обработчик для кнопки сброса
+        debounceTimer = setTimeout(() => {
+            applyFilter();
+            debounceTimer = null;
+        }, 5000);
+    };
+
+    // Обработка Enter
+    const handleEnterKey = (event) => {
+        if (event.key === 'Enter') {
+            event.preventDefault();
+
+            if (debounceTimer) {
+                clearTimeout(debounceTimer);
+                debounceTimer = null;
+            }
+
+            applyFilter();
+        }
+    };
+
+    // Обработка изменений в селектах
+    const handleSelectChange = () => {
+        if (debounceTimer) {
+            clearTimeout(debounceTimer);
+            debounceTimer = null;
+        }
+
+        saveFocusBeforeReload();
+        applyFilter();
+    };
+
+    // Сброс фильтров
+    const resetFilters = () => {
+        if (debounceTimer) {
+            clearTimeout(debounceTimer);
+            debounceTimer = null;
+        }
+
+        // Очищаем значения
+        filterNomInput.value = '';
+        filterFormaInput.value = '';
+        filterEconomistInput.value = '';
+        filterProgrammerSelect.value = '';
+        filterTipSelect.value = '';
+        filterStatusSelect.value = '';
+
+        // Переходим на главную страницу без параметров
+        window.location.href = '/';
+    };
+
+    // Предотвращение отправки формы
+    const preventFormSubmit = (event) => {
+        if (event.key === 'Enter' && event.target.tagName === 'INPUT') {
+            event.preventDefault();
+            handleEnterKey(event);
+        }
+    };
+
+    // Назначение обработчиков событий
+    filterNomInput.addEventListener('input', applyFilterWithDebounce);
+    filterFormaInput.addEventListener('input', applyFilterWithDebounce);
+    filterEconomistInput.addEventListener('input', applyFilterWithDebounce);
+
+    filterNomInput.addEventListener('keydown', handleEnterKey);
+    filterFormaInput.addEventListener('keydown', handleEnterKey);
+    filterEconomistInput.addEventListener('keydown', handleEnterKey);
+
+    filterNomInput.addEventListener('keydown', preventFormSubmit);
+    filterFormaInput.addEventListener('keydown', preventFormSubmit);
+    filterEconomistInput.addEventListener('keydown', preventFormSubmit);
+
+    filterProgrammerSelect.addEventListener('change', handleSelectChange);
+    filterTipSelect.addEventListener('change', handleSelectChange);
+    filterStatusSelect.addEventListener('change', handleSelectChange);
+
     resetButton.addEventListener('click', resetFilters);
+
+    // Восстановление фокуса
+    restoreFocusAfterReload();
+
+    // Заполнение полей фильтров из URL при загрузке
+    const populateFiltersFromUrl = () => {
+        const urlParams = new URLSearchParams(window.location.search);
+
+        if (urlParams.has('filter_nom')) {
+            filterNomInput.value = urlParams.get('filter_nom');
+        }
+        if (urlParams.has('filter_forma')) {
+            filterFormaInput.value = urlParams.get('filter_forma');
+        }
+        if (urlParams.has('filter_economist')) {
+            filterEconomistInput.value = urlParams.get('filter_economist');
+        }
+        if (urlParams.has('filter_programmer')) {
+            filterProgrammerSelect.value = urlParams.get('filter_programmer');
+        }
+        if (urlParams.has('filter_tip')) {
+            filterTipSelect.value = urlParams.get('filter_tip');
+        }
+        if (urlParams.has('filter_status')) {
+            filterStatusSelect.value = urlParams.get('filter_status');
+        }
+    };
+
+    populateFiltersFromUrl();
 });
 </script>
 
