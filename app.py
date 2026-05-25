@@ -550,6 +550,14 @@ def reject_request(request_id):
 
     return redirect(url_for('index'))
 
+@app.errorhandler(Exception)
+def handle_exception(e):
+    import traceback
+    error_traceback = traceback.format_exc()
+    # Выводим ошибку в консоль
+    print(f"CRITICAL ERROR: {error_traceback}")
+    # Возвращаем ошибку в браузер (раскомментируйте для отладки)
+    return f"<pre>Internal Server Error:\n{error_traceback}</pre>", 500
 
 # --- Запуск приложения ---
 if __name__ == '__main__':
@@ -577,3 +585,5 @@ if __name__ == '__main__':
     # Встроенный сервер только для разработки!
     # Для продакшена используйте: waitress-serve --host=0.0.0.0 --port=1313 app:app
     app.run(host='0.0.0.0', port=1313, debug=True)
+    app.config['DEBUG'] = True
+    app.config['PROPAGATE_EXCEPTIONS'] = True
